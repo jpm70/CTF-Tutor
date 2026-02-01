@@ -5,7 +5,7 @@ import time
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="CTF Mentor", page_icon="📟", layout="wide")
 
-# 2. DISEÑO HACKER (Tu estilo verde neón)
+# 2. DISEÑO HACKER (Letras verdes y fondo negro)
 st.markdown("""
 <style>
     .stApp { background-color: #000000; }
@@ -21,14 +21,13 @@ st.markdown("""
 try:
     # Configuramos la API Key desde los Secrets de Streamlit
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    
-    # IMPORTANTE: Usamos solo el nombre del modelo sin prefijos raros
+    # Usamos el modelo estable gemini-1.5-flash
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     st.error("⚠️ ERROR DE CONFIGURACIÓN: Revisa los Secrets en Streamlit.")
     st.stop()
 
-# 4. BARRA LATERAL
+# 4. BARRA LATERAL (Configuración según tu plan de CTF)
 with st.sidebar:
     st.title("📟 CTF_PROTOCOL_V1")
     modo = st.selectbox("MODO_DE_AYUDA:", ["Pista Ligera", "Guía Paso a Paso", "Explicador Conceptual"])
@@ -57,14 +56,14 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        # Definimos el comportamiento del Mentor
+        # Definimos las instrucciones del sistema (System Prompt)
         sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. REGLAS: NO des la flag, guía con metodología técnica."
         
         try:
-            # Generamos la respuesta uniendo las instrucciones y la duda
+            # Generamos la respuesta
             response = model.generate_content(sys_prompt + "\n\nUsuario: " + prompt)
             
-            # Efecto de escritura tipo terminal
+            # Efecto de terminal (escritura progresiva)
             for word in response.text.split():
                 full_res += word + " "
                 time.sleep(0.03)
@@ -73,5 +72,4 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
             st.session_state.messages.append({"role": "assistant", "content": full_res})
             
         except Exception as e:
-            # Si vuelve a dar error, aquí veremos exactamente por qué
             st.error(f"❌ ERROR DE PROTOCOLO: {str(e)}")
