@@ -2,10 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 import time
 
-# 1. CONFIGURACIÓN DE PÁGINA
+# 1. CONFIGURACIÓN
 st.set_page_config(page_title="CTF Mentor", page_icon="📟", layout="wide")
 
-# 2. DISEÑO HACKER (Verde neón y fondo negro)
+# 2. ESTILO HACKER
 st.markdown("""
 <style>
     .stApp { background-color: #000000; }
@@ -17,33 +17,29 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. CONEXIÓN API ESTABLE (Sin rutas beta)
+# 3. CONEXIÓN ESTABLE
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Usamos el modelo estable para evitar el error 404
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error("⚠️ ERROR DE CONFIGURACIÓN: Revisa los Secrets en Streamlit.")
+    st.error(f"Error de configuración: {e}")
     st.stop()
 
-# 4. BARRA LATERAL (Protocolos de tu documento)
+# 4. MENÚ LATERAL
 with st.sidebar:
     st.title("📟 CTF_PROTOCOL_V1")
-    st.markdown("---")
     modo = st.selectbox("MODO_DE_AYUDA:", ["Pista Ligera", "Guía Paso a Paso", "Explicador Conceptual"])
     cat = st.selectbox("CATEGORÍA_RETO:", ["Web Exploitation", "Reconocimiento", "Privilege Escalation", "Forensics", "Cryptography"])
-    
     if st.button("REINICIAR TERMINAL"):
         st.session_state.messages = []
         st.rerun()
 
-# 5. INTERFAZ DE CHAT
+# 5. CHAT
 st.title("🟢 CTF MENTOR: ON-LINE")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Mostrar historial con estilo hacker
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
@@ -56,21 +52,15 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
     with st.chat_message("assistant"):
         m_placeholder = st.empty()
         full_res = ""
-        
-        # Instrucciones basadas en tu plan original
-        sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. REGLAS: NO des la flag, guía con metodología técnica."
+        sys_instr = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. NO des la flag, guía con metodología técnica."
         
         try:
-            # Llamada directa al modelo estable
-            response = model.generate_content(sys_prompt + "\n\nUsuario: " + prompt)
-            
-            # Efecto de terminal (escritura progresiva)
+            response = model.generate_content(sys_instr + "\n\nUsuario: " + prompt)
             for word in response.text.split():
                 full_res += word + " "
                 time.sleep(0.03)
                 m_placeholder.markdown(full_res + "▌")
             m_placeholder.markdown(full_res)
             st.session_state.messages.append({"role": "assistant", "content": full_res})
-            
         except Exception as e:
             st.error(f"❌ ERROR DE PROTOCOLO: {str(e)}")
