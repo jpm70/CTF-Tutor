@@ -19,22 +19,22 @@ st.markdown("""
 
 # 3. CONEXIÓN API ESTABLE
 try:
+    # Configuramos la API Key desde los Secrets de Streamlit
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Usamos el modelo más estable para evitar errores 404
+    
+    # IMPORTANTE: Usamos solo el nombre del modelo sin prefijos raros
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error("⚠️ ERROR: Configura GEMINI_API_KEY en los Secrets de Streamlit.")
+    st.error("⚠️ ERROR DE CONFIGURACIÓN: Revisa los Secrets en Streamlit.")
     st.stop()
 
-# 4. BARRA LATERAL (Configuración según tu doc)
+# 4. BARRA LATERAL
 with st.sidebar:
     st.title("📟 CTF_PROTOCOL_V1")
-    st.markdown("---")
-    # Opciones de tu documento
     modo = st.selectbox("MODO_DE_AYUDA:", ["Pista Ligera", "Guía Paso a Paso", "Explicador Conceptual"])
     cat = st.selectbox("CATEGORÍA_RETO:", ["Web Exploitation", "Reconocimiento", "Privilege Escalation", "Forensics", "Cryptography"])
     
-    if st.button("LIMPIAR REGISTROS"):
+    if st.button("LIMPIAR TERMINAL"):
         st.session_state.messages = []
         st.rerun()
 
@@ -57,19 +57,14 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        # Instrucciones de comportamiento del documento
-        sys_prompt = (
-            f"Eres 'CTF Mentor', un experto en seguridad. "
-            f"Ayuda en {cat} usando el modo {modo}. "
-            f"REGLAS: NO des la flag, guía con metodología (Recon -> Vuln -> Exp) "
-            f"y enseña herramientas como nmap, gobuster o burp."
-        )
+        # Definimos el comportamiento del Mentor
+        sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. REGLAS: NO des la flag, guía con metodología técnica."
         
         try:
-            # Generación de respuesta
+            # Generamos la respuesta uniendo las instrucciones y la duda
             response = model.generate_content(sys_prompt + "\n\nUsuario: " + prompt)
             
-            # Efecto visual de terminal
+            # Efecto de escritura tipo terminal
             for word in response.text.split():
                 full_res += word + " "
                 time.sleep(0.03)
@@ -78,4 +73,5 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
             st.session_state.messages.append({"role": "assistant", "content": full_res})
             
         except Exception as e:
+            # Si vuelve a dar error, aquí veremos exactamente por qué
             st.error(f"❌ ERROR DE PROTOCOLO: {str(e)}")
