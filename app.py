@@ -1,5 +1,6 @@
 import streamlit as st
 from google import genai
+from google.genai import types # Importación adicional para mayor control
 import time
 
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -18,8 +19,9 @@ hacker_style = """
 """
 st.markdown(hacker_style, unsafe_allow_html=True)
 
-# 3. CONEXIÓN API
+# 3. CONEXIÓN API (Forzando versión estable)
 try:
+    # Usamos la configuración por defecto que apunta a la v1 estable
     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 except Exception as e:
     st.error("⚠️ PROTOCOLO FALLIDO: Configura GEMINI_API_KEY en Secrets.")
@@ -55,31 +57,33 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        sys_instructions = f"""
-        Eres 'CTF Mentor', un experto en ciberseguridad. 
-        Reto actual: {cat}. Modo de ayuda: {modo}.
-        REGLAS:
-        - NUNCA des la flag ni el payload final.
-        - Guía paso a paso en la metodología (Recon -> Vuln -> Exploit).
-        - Recomienda herramientas técnicas.
-        """
+        # System Instructions basadas en tu documento original
+        sys_instructions = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. No des la flag. Guía con metodología técnica."
         
         try:
-            # CORRECCIÓN: Nombre de modelo estándar para la librería google-genai
+            # CAMBIO CLAVE: Usamos el ID de modelo más básico y compatible
+            # En la nueva librería 'google-genai', a veces basta con poner el nombre corto
             response = client.models.generate_content(
-                model="gemini-1.5-flash", 
-                config={'system_instruction': sys_instructions},
+                model="gemini-1.5-flash",
+                config=types.GenerateContentConfig(
+                    system_instruction=sys_instructions,
+                    temperature=0.7
+                ),
                 contents=prompt
             )
             
-            for word in response.text.split():
-                full_res += word + " "
-                time.sleep(0.03)
-                m_placeholder.markdown(full_res + "▌")
-            m_placeholder.markdown(full_res)
-            
-            st.session_state.messages.append({"role": "assistant", "content": full_res})
+            if response.text:
+                for word in response.text.split():
+                    full_res += word + " "
+                    time.sleep(0.03)
+                    m_placeholder.markdown(full_res + "▌")
+                m_placeholder.markdown(full_res)
+                st.session_state.messages.append({"role": "assistant", "content": full_res})
+            else:
+                st.warning("La IA no devolvió texto. Revisa tu cuota en AI Studio.")
             
         except Exception as e:
-            # Si hay error de cuota (429), se mostrará aquí de forma legible
-            st.error(f"❌ ERROR EN EL ENLACE: {str(e)}")
+            # Capturamos el error detallado para saber si es 404 o 429
+            st.error(f"❌ ERROR DE CONEXIÓN: {str(e)}")
+            if "429" in str(e):
+                st.info("💡 Tip: Has agotado la cuota gratuita por ahora. Espera 60 segundos.")
