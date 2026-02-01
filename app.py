@@ -5,7 +5,7 @@ import time
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="CTF Mentor", page_icon="📟", layout="wide")
 
-# 2. DISEÑO HACKER (Letras verdes y fondo negro)
+# 2. DISEÑO HACKER
 st.markdown("""
 <style>
     .stApp { background-color: #000000; }
@@ -17,12 +17,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. CONEXIÓN API (Usando la librería estable)
+# 3. CONEXIÓN API ESTÁNDAR
 try:
+    # Usamos la configuración clásica de la librería google-generativeai
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error("⚠️ ERROR: Revisa tu GEMINI_API_KEY en Secrets.")
+    st.error("⚠️ ERROR: Configura GEMINI_API_KEY en Secrets.")
     st.stop()
 
 # 4. BARRA LATERAL (Categorías de tu documento)
@@ -54,12 +55,12 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        # System Instruction extraída de tu doc [cite: 311, 312, 320]
-        instruction = f"Eres 'CTF Mentor'. Ayuda en {cat} usando el modo {modo}. REGLAS: NO des la flag, guía con metodología y enseña herramientas como nmap o burp."
+        # Instrucción de sistema según tu documento
+        sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. NO des la flag, guía con metodología y enseña herramientas."
         
         try:
-            # Generación con la librería tradicional
-            response = model.generate_content(instruction + "\n\nUsuario: " + prompt)
+            # Generación de respuesta simple y directa
+            response = model.generate_content(sys_prompt + "\nUsuario: " + prompt)
             
             for word in response.text.split():
                 full_res += word + " "
@@ -69,4 +70,4 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
             st.session_state.messages.append({"role": "assistant", "content": full_res})
             
         except Exception as e:
-            st.error(f"❌ ERROR: {str(e)}")
+            st.error(f"❌ ERROR DE PROTOCOLO: {str(e)}")
