@@ -72,7 +72,7 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         try:
             # Uso del modelo estable gemini-2.0-flash para evitar ServerError
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash",
                 config={'system_instruction': sys_instructions},
                 contents=prompt
             )
@@ -88,3 +88,4 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
             
         except Exception as e:
             st.error(f"❌ ERROR EN EL ENLACE NEURONAL: {str(e)}")
+
