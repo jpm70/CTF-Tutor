@@ -5,7 +5,7 @@ import time
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="CTF Mentor", page_icon="📟", layout="wide")
 
-# 2. DISEÑO HACKER
+# 2. DISEÑO HACKER (Tu estilo verde neón)
 st.markdown("""
 <style>
     .stApp { background-color: #000000; }
@@ -17,18 +17,20 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. CONEXIÓN API ESTÁNDAR
+# 3. CONEXIÓN API ESTABLE
 try:
-    # Usamos la configuración clásica de la librería google-generativeai
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    # Usamos el modelo más estable para evitar errores 404
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
-    st.error("⚠️ ERROR: Configura GEMINI_API_KEY en Secrets.")
+    st.error("⚠️ ERROR: Configura GEMINI_API_KEY en los Secrets de Streamlit.")
     st.stop()
 
-# 4. BARRA LATERAL (Categorías de tu documento)
+# 4. BARRA LATERAL (Configuración según tu doc)
 with st.sidebar:
     st.title("📟 CTF_PROTOCOL_V1")
+    st.markdown("---")
+    # Opciones de tu documento
     modo = st.selectbox("MODO_DE_AYUDA:", ["Pista Ligera", "Guía Paso a Paso", "Explicador Conceptual"])
     cat = st.selectbox("CATEGORÍA_RETO:", ["Web Exploitation", "Reconocimiento", "Privilege Escalation", "Forensics", "Cryptography"])
     
@@ -55,13 +57,19 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        # Instrucción de sistema según tu documento
-        sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. NO des la flag, guía con metodología y enseña herramientas."
+        # Instrucciones de comportamiento del documento
+        sys_prompt = (
+            f"Eres 'CTF Mentor', un experto en seguridad. "
+            f"Ayuda en {cat} usando el modo {modo}. "
+            f"REGLAS: NO des la flag, guía con metodología (Recon -> Vuln -> Exp) "
+            f"y enseña herramientas como nmap, gobuster o burp."
+        )
         
         try:
-            # Generación de respuesta simple y directa
-            response = model.generate_content(sys_prompt + "\nUsuario: " + prompt)
+            # Generación de respuesta
+            response = model.generate_content(sys_prompt + "\n\nUsuario: " + prompt)
             
+            # Efecto visual de terminal
             for word in response.text.split():
                 full_res += word + " "
                 time.sleep(0.03)
