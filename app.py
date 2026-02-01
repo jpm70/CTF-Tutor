@@ -5,7 +5,7 @@ import time
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="CTF Mentor", page_icon="📟", layout="wide")
 
-# 2. DISEÑO HACKER (Letras verdes y fondo negro)
+# 2. DISEÑO HACKER (Verde neón y fondo negro)
 st.markdown("""
 <style>
     .stApp { background-color: #000000; }
@@ -17,23 +17,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. CONEXIÓN API ESTABLE
+# 3. CONEXIÓN API ESTABLE (Sin rutas beta)
 try:
-    # Configuramos la API Key desde los Secrets de Streamlit
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    # Usamos el modelo estable gemini-1.5-flash
+    # Usamos el modelo estable para evitar el error 404
     model = genai.GenerativeModel('gemini-1.5-flash')
 except Exception as e:
     st.error("⚠️ ERROR DE CONFIGURACIÓN: Revisa los Secrets en Streamlit.")
     st.stop()
 
-# 4. BARRA LATERAL (Configuración según tu plan de CTF)
+# 4. BARRA LATERAL (Protocolos de tu documento)
 with st.sidebar:
     st.title("📟 CTF_PROTOCOL_V1")
+    st.markdown("---")
     modo = st.selectbox("MODO_DE_AYUDA:", ["Pista Ligera", "Guía Paso a Paso", "Explicador Conceptual"])
     cat = st.selectbox("CATEGORÍA_RETO:", ["Web Exploitation", "Reconocimiento", "Privilege Escalation", "Forensics", "Cryptography"])
     
-    if st.button("LIMPIAR TERMINAL"):
+    if st.button("REINICIAR TERMINAL"):
         st.session_state.messages = []
         st.rerun()
 
@@ -43,6 +43,7 @@ st.title("🟢 CTF MENTOR: ON-LINE")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Mostrar historial con estilo hacker
 for m in st.session_state.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
@@ -56,11 +57,11 @@ if prompt := st.chat_input("Inserta consulta técnica..."):
         m_placeholder = st.empty()
         full_res = ""
         
-        # Definimos las instrucciones del sistema (System Prompt)
+        # Instrucciones basadas en tu plan original
         sys_prompt = f"Eres 'CTF Mentor'. Ayuda en {cat} modo {modo}. REGLAS: NO des la flag, guía con metodología técnica."
         
         try:
-            # Generamos la respuesta
+            # Llamada directa al modelo estable
             response = model.generate_content(sys_prompt + "\n\nUsuario: " + prompt)
             
             # Efecto de terminal (escritura progresiva)
